@@ -2,11 +2,24 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
+    gui.setup();
+    gui.add(uiLearn.setup("learn"));
+    gui.add(uiClearCircles.setup("clear circles"));
+    gui.add(uiClearContourEdge.setup("clear contour"));
+    gui.add(uiThreshold.setup("threshold", 50, 0, 100));
+
+    grabber.setup(640, 480);
+    
+    color.allocate(grabber.getWidth(), grabber.getHeight());
+    grayscale.allocate(grabber.getWidth(), grabber.getHeight());
+    background.allocate(grabber.getWidth(), grabber.getHeight());
+    difference.allocate(grabber.getWidth(), grabber.getHeight());
+
     box2d.init();
     box2d.setGravity(0, 30);
     box2d.createGround();
     box2d.registerGrabbing();
-    box2d.createBounds(ofRectangle(0, 0, ofGetWidth(), ofGetHeight()));
+    box2d.createBounds(ofRectangle(0, 0, grabber.getWidth(), grabber.getHeight()));
     
     ofSetBackgroundColor(0);
     
@@ -31,10 +44,41 @@ void ofApp::setup(){
 //--------------------------------------------------------------
 void ofApp::update(){
     box2d.update();
+    grabber.update();
+
+    if(grabber.isFrameNew()){
+        color.setFromPixels(grabber.getPixels());
+        grayscale = color;
+        difference.absDiff(background, grayscale);
+        difference.threshold(uiThreshold);
+
+        int minimum = difference.getWidth() * difference.getHeight() * 0.05;
+        int maximum = difference.getWidth() * difference.getHeight() * 0.8;
+        contour.findContours(difference, minimum, maximum, 1, false);
+    }
+
+    if(uiLearn){
+        background = color;
+    }
+
+    if(uiClearCircles){
+        circles.clear();
+    }
+
+    if(uiClearContourEdge){
+        contourEdge->clear();
+        background = color;
+    }
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
+    color.draw(0, 0);
+    if(!contour.blobs.empty()){
+        createContourEdge(ofPolyline(contour.blobs.at(0).pts));
+        contourEdge->draw();
+    }
+
     ofSetColor(255, 219, 100);
     for(auto rect:rectangles){
         rect->draw();
@@ -54,6 +98,13 @@ void ofApp::draw(){
     for(auto heart:hearts){
         heart->draw();
     }
+}
+
+void ofApp::createContourEdge(ofPolyline polyline){
+    delete contourEdge;
+    contourEdge = new ofxBox2dEdge();
+    contourEdge->addVertexes(polyline);
+    contourEdge->create(box2d.getWorld());
 }
 
 //--------------------------------------------------------------
@@ -137,3 +188,4 @@ void ofApp::gotMessage(ofMessage msg){
 void ofApp::dragEvent(ofDragInfo dragInfo){
 
 }
+
