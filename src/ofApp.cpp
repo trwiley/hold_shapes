@@ -2,13 +2,14 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
+    ofBackground(0);
     gui.setup();
     gui.add(uiLearn.setup("learn"));
     gui.add(uiClearCircles.setup("clear circles"));
     gui.add(uiClearContourEdge.setup("clear contour"));
     gui.add(uiThreshold.setup("threshold", 50, 0, 100));
 
-    grabber.setup(640, 480);
+    grabber.setup(1024, 768);
     
     color.allocate(grabber.getWidth(), grabber.getHeight());
     grayscale.allocate(grabber.getWidth(), grabber.getHeight());
@@ -20,8 +21,6 @@ void ofApp::setup(){
     box2d.createGround();
     box2d.registerGrabbing();
     box2d.createBounds(ofRectangle(0, 0, grabber.getWidth(), grabber.getHeight()));
-    
-    ofSetBackgroundColor(0);
     
     // set up right triangle shape
     rightTriangle.begin();
@@ -73,10 +72,23 @@ void ofApp::update(){
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-    color.draw(0, 0);
+    //color.draw(0, 0);
+    
     if(!contour.blobs.empty()){
         createContourEdge(ofPolyline(contour.blobs.at(0).pts));
         contourEdge->draw();
+    }
+    
+    ofSetColor(255, 77, 231);
+    for(int i = 0; i < grabber.getHeight(); i += 6) {
+        ofPolyline line;
+        for(int j = 0; j < grabber.getWidth(); j++){
+            ofColor lineColor = difference.getPixels().getColor(j, i);
+            int brightness = lineColor.getBrightness();
+            line.addVertex(j, i + ofMap(brightness, 0, 255, 0, -64));
+        }
+        line = line.getSmoothed(10);
+        line.draw();
     }
 
     ofSetColor(255, 219, 100);
@@ -98,6 +110,8 @@ void ofApp::draw(){
     for(auto heart:hearts){
         heart->draw();
     }
+    
+    gui.draw();
 }
 
 void ofApp::createContourEdge(ofPolyline polyline){

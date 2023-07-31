@@ -40,7 +40,7 @@ class ofApp : public ofBaseApp{
     ofxCvContourFinder contour;
 
     ofxBox2d box2d;
-    // ofxBox2dCircle circle;
+
     vector <shared_ptr<ofxBox2dCircle>> circles;
     vector <shared_ptr<ofxBox2dRect>> rectangles;
     vector <shared_ptr<ofxBox2dPolygon>> hearts;
@@ -49,4 +49,7 @@ class ofApp : public ofBaseApp{
     ofPolyline rightTriangle;
 
     ofxBox2dEdge *contourEdge;
+    
+    ofImage imgDifference;
+    ofPixels pxPrevious;
 };
